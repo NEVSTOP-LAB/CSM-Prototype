@@ -57,7 +57,7 @@ def revert_arguments_safe_string(safe_argument_string: str, force_convert: bool 
         force_convert: Convert even when argument type is not ``SAFESTR``.
 
     Returns:
-        Origin argument string.
+        Original argument string.
 
     Raises:
         ValueError: If input is malformed.
