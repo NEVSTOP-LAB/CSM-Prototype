@@ -77,6 +77,57 @@ Python 实现提供同语义接口：
 - 若不是 `%`，直接输出原字符
 - 不完整 `%` 转义、非法十六进制，抛出 `ValueError`
 
+## 5) 两个函数流程图
+
+### `make_string_arguments_safe(argument_string, ignore_argument_type=False)`
+
+```mermaid
+flowchart TD
+    A[开始] --> B{argument_string 是 str?}
+    B -- 否 --> E1[抛出 TypeError] --> Z[结束]
+    B -- 是 --> C{ignore_argument_type 是 bool?}
+    C -- 否 --> E2[抛出 TypeError] --> Z
+    C -- 是 --> D[逐字符扫描 argument_string]
+    D --> F{字符在 -|@&<>\\r\\n/;, 或 % ?}
+    F -- 是 --> G[输出 %HH 大写十六进制]
+    F -- 否 --> H[原字符输出]
+    G --> I{还有下一个字符?}
+    H --> I
+    I -- 是 --> F
+    I -- 否 --> J[拼接 safe_argument_string]
+    J --> K{ignore_argument_type ?}
+    K -- 是 --> L[返回 safe_argument_string] --> Z
+    K -- 否 --> M[返回 <SAFESTR> + safe_argument_string] --> Z
+```
+
+### `revert_arguments_safe_string(safe_argument_string, force_convert=False)`
+
+```mermaid
+flowchart TD
+    A[开始] --> B{safe_argument_string 是 str?}
+    B -- 否 --> E1[抛出 TypeError] --> Z[结束]
+    B -- 是 --> C{force_convert 是 bool?}
+    C -- 否 --> E2[抛出 TypeError] --> Z
+    C -- 是 --> D{以 <SAFESTR> 开头?}
+    D -- 是 --> E[去掉前缀, 得到 encoded_text]
+    D -- 否 --> F{force_convert ?}
+    F -- 否 --> G[原样返回 safe_argument_string] --> Z
+    F -- 是 --> H[encoded_text = safe_argument_string]
+    E --> I[逐字符扫描 encoded_text]
+    H --> I
+    I --> J{当前字符是 % ?}
+    J -- 否 --> K[原字符加入结果]
+    J -- 是 --> L{后面有两位字符?}
+    L -- 否 --> E3[抛出 ValueError: 不完整转义] --> Z
+    L -- 是 --> M{两位都是十六进制?}
+    M -- 否 --> E4[抛出 ValueError: 非法十六进制] --> Z
+    M -- 是 --> N[%HH 解码为字符并加入结果]
+    K --> O{还有下一个字符?}
+    N --> O
+    O -- 是 --> J
+    O -- 否 --> P[返回拼接后的原字符串] --> Z
+```
+
 # 为什么该方案无歧义
 
 - `%` 作为唯一转义前缀，固定长度 3（`%HH`）。
