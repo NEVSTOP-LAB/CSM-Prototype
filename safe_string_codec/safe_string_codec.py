@@ -1,47 +1,43 @@
 """Safe string conversion utilities.
 
 This module provides two functions:
-- to_safe_string: convert any Python string to an ASCII-safe representation.
-- from_safe_string: recover the original Python string exactly.
+- to_safe_string: convert input to a CSM-safe representation.
+- from_safe_string: recover the original string exactly.
 
-Encoding format:
-- Input string is first encoded into UTF-8 bytes with ``surrogatepass`` to preserve
-  edge cases like lone surrogate code points.
-- Bytes mapped to unreserved characters [A-Za-z0-9._-] are emitted directly.
-- All other bytes are emitted as ``~HH`` where HH is uppercase hexadecimal.
-
-The output only contains [A-Za-z0-9._-~].
+The escaping behavior follows CSM keyword-safe conventions:
+- Escape CSM keyword characters using ``%HH`` uppercase hex.
+- ``%`` is also escaped to keep decoding unambiguous.
 """
 
 from __future__ import annotations
 
-import string
-
 _HEX_DIGITS = set("0123456789ABCDEFabcdef")
-_UNRESERVED = set(string.ascii_letters + string.digits + "._-")
-_ESCAPE = "~"
+_ESCAPE = "%"
+
+# Characters participating in documented CSM keywords:
+# ->, ->|, -@, -&, <-, \r, \n, //, >>, >>>, ;, ,
+_CSM_KEYWORD_CHARS = set("-|@&<>\r\n/;,")
+_ESCAPED_CHARS = _CSM_KEYWORD_CHARS | {_ESCAPE}
 
 
 def to_safe_string(text: str) -> str:
-    """Convert any Python string to a reversible ASCII-safe string.
+    """Convert string to a reversible CSM-safe string.
 
     Args:
-        text: Any Python string, including empty string, control chars, emoji,
-            and lone surrogates.
+        text: Any Python string.
 
     Returns:
-        ASCII-safe encoded string.
+        CSM-safe encoded string.
     """
     if not isinstance(text, str):
         raise TypeError("text must be str")
 
     encoded_parts: list[str] = []
-    for byte in text.encode("utf-8", errors="surrogatepass"):
-        ch = chr(byte)
-        if ch in _UNRESERVED:
-            encoded_parts.append(ch)
+    for ch in text:
+        if ch in _ESCAPED_CHARS:
+            encoded_parts.append(f"{_ESCAPE}{ord(ch):02X}")
         else:
-            encoded_parts.append(f"{_ESCAPE}{byte:02X}")
+            encoded_parts.append(ch)
     return "".join(encoded_parts)
 
 
@@ -60,7 +56,7 @@ def from_safe_string(safe_text: str) -> str:
     if not isinstance(safe_text, str):
         raise TypeError("safe_text must be str")
 
-    result = bytearray()
+    result: list[str] = []
     i = 0
     length = len(safe_text)
 
@@ -72,14 +68,11 @@ def from_safe_string(safe_text: str) -> str:
             h1, h2 = safe_text[i + 1], safe_text[i + 2]
             if h1 not in _HEX_DIGITS or h2 not in _HEX_DIGITS:
                 raise ValueError("Malformed safe string: invalid hex escape")
-            result.append(int(h1 + h2, 16))
+            result.append(chr(int(h1 + h2, 16)))
             i += 3
             continue
 
-        if ch not in _UNRESERVED:
-            raise ValueError("Malformed safe string: unexpected character")
-
-        result.append(ord(ch))
+        result.append(ch)
         i += 1
 
-    return result.decode("utf-8", errors="surrogatepass")
+    return "".join(result)

@@ -8,22 +8,24 @@ class SafeStringCodecTests(unittest.TestCase):
         self.assertEqual(to_safe_string(""), "")
         self.assertEqual(from_safe_string(""), "")
 
-    def test_ascii_unreserved_kept(self):
-        original = "AbcXYZ019-_."
+    def test_ascii_regular_text_kept(self):
+        original = "AbcXYZ019_. hello"
         safe = to_safe_string(original)
         self.assertEqual(safe, original)
         self.assertEqual(from_safe_string(safe), original)
 
-    def test_special_characters_are_encoded(self):
-        original = "a b/c?d=e&f#g"
+    def test_csm_keyword_characters_are_encoded(self):
+        original = "->| -@ -& <-\r\n// >> >>> ;,"
         safe = to_safe_string(original)
+        self.assertNotIn("->", safe)
+        self.assertNotIn(">>", safe)
         self.assertNotEqual(safe, original)
         self.assertEqual(from_safe_string(safe), original)
 
-    def test_escape_character_is_always_encoded(self):
-        original = "~"
+    def test_percent_character_is_always_encoded(self):
+        original = "%"
         safe = to_safe_string(original)
-        self.assertEqual(safe, "~7E")
+        self.assertEqual(safe, "%25")
         self.assertEqual(from_safe_string(safe), original)
 
     def test_unicode_chinese_and_emoji(self):
@@ -41,29 +43,19 @@ class SafeStringCodecTests(unittest.TestCase):
         safe = to_safe_string(original)
         self.assertEqual(from_safe_string(safe), original)
 
-    def test_lone_surrogate_preserved(self):
-        original = "\ud800"
-        safe = to_safe_string(original)
-        restored = from_safe_string(safe)
-        self.assertEqual(restored, original)
-
-    def test_roundtrip_for_all_byte_values(self):
-        original = bytes(range(256)).decode("latin1")
+    def test_roundtrip_for_all_ascii_values(self):
+        original = "".join(chr(i) for i in range(128))
         safe = to_safe_string(original)
         restored = from_safe_string(safe)
         self.assertEqual(restored, original)
 
     def test_decode_rejects_incomplete_escape(self):
         with self.assertRaises(ValueError):
-            from_safe_string("abc~")
+            from_safe_string("abc%")
 
     def test_decode_rejects_bad_hex(self):
         with self.assertRaises(ValueError):
-            from_safe_string("abc~G1")
-
-    def test_decode_rejects_unexpected_character(self):
-        with self.assertRaises(ValueError):
-            from_safe_string("abc def")
+            from_safe_string("abc%G1")
 
     def test_type_errors(self):
         with self.assertRaises(TypeError):
