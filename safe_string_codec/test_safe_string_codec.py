@@ -1,9 +1,12 @@
 import unittest
 
-from safe_string_codec.safe_string_codec import from_safe_string, to_safe_string
+from safe_string_codec import from_safe_string, to_safe_string
 
 
 class SafeStringCodecTests(unittest.TestCase):
+    def test_package_level_imports_are_available(self):
+        self.assertEqual(to_safe_string.__name__, "to_safe_string")
+        self.assertEqual(from_safe_string.__name__, "from_safe_string")
     def test_empty_string(self):
         self.assertEqual(to_safe_string(""), "")
         self.assertEqual(from_safe_string(""), "")
