@@ -33,6 +33,13 @@ class SafeStringCodecTests(unittest.TestCase):
         safe = to_safe_string(original)
         self.assertEqual(from_safe_string(safe), original)
 
+    def test_unicode_with_adjacent_keywords(self):
+        original = "前缀->中文😀//后缀"
+        safe = to_safe_string(original)
+        self.assertNotIn("->", safe)
+        self.assertNotIn("//", safe)
+        self.assertEqual(from_safe_string(safe), original)
+
     def test_control_and_null_characters(self):
         original = "line1\nline2\t\x00end"
         safe = to_safe_string(original)

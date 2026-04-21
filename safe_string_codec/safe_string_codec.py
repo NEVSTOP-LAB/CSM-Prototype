@@ -14,8 +14,9 @@ from __future__ import annotations
 _HEX_DIGITS = set("0123456789ABCDEFabcdef")
 _ESCAPE = "%"
 
-# Characters participating in documented CSM keywords:
-# ->, ->|, -@, -&, <-, \r, \n, //, >>, >>>, ;, ,
+# Character-based conservative escaping for CSM keyword safety.
+# We escape all characters that appear in documented keyword patterns
+# (->, ->|, -@, -&, <-, \r, \n, //, >>, >>>, ;, ,), regardless of context.
 _CSM_KEYWORD_CHARS = set("-|@&<>\r\n/;,")
 _ESCAPED_CHARS = _CSM_KEYWORD_CHARS | {_ESCAPE}
 
@@ -35,7 +36,7 @@ def to_safe_string(text: str) -> str:
     encoded_parts: list[str] = []
     for ch in text:
         if ch in _ESCAPED_CHARS:
-            encoded_parts.append(f"{_ESCAPE}{ord(ch):02X}")
+            encoded_parts.append(f"{_ESCAPE}{ch.encode('ascii').hex().upper()}")
         else:
             encoded_parts.append(ch)
     return "".join(encoded_parts)
