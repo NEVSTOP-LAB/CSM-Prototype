@@ -93,13 +93,3 @@ def revert_arguments_safe_string(safe_argument_string: str, force_convert: bool 
         i += 1
 
     return "".join(result)
-
-
-def to_safe_string(text: str) -> str:
-    """Backward-compatible alias without SAFESTR type prefix."""
-    return make_string_arguments_safe(argument_string=text, ignore_argument_type=True)
-
-
-def from_safe_string(safe_text: str) -> str:
-    """Backward-compatible alias that always converts."""
-    return revert_arguments_safe_string(safe_argument_string=safe_text, force_convert=True)
