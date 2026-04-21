@@ -1,15 +1,42 @@
 import unittest
 
-from safe_string_codec import from_safe_string, to_safe_string
+from safe_string_codec import (
+    from_safe_string,
+    make_string_arguments_safe,
+    revert_arguments_safe_string,
+    to_safe_string,
+)
 
 
 class SafeStringCodecTests(unittest.TestCase):
     def test_package_level_imports_are_available(self):
         self.assertEqual(to_safe_string.__name__, "to_safe_string")
         self.assertEqual(from_safe_string.__name__, "from_safe_string")
+        self.assertEqual(make_string_arguments_safe.__name__, "make_string_arguments_safe")
+        self.assertEqual(
+            revert_arguments_safe_string.__name__, "revert_arguments_safe_string"
+        )
+
     def test_empty_string(self):
         self.assertEqual(to_safe_string(""), "")
         self.assertEqual(from_safe_string(""), "")
+
+    def test_make_string_arguments_safe_default_adds_type_prefix(self):
+        safe = make_string_arguments_safe("A->B")
+        self.assertTrue(safe.startswith("<SAFESTR>"))
+        self.assertEqual(revert_arguments_safe_string(safe), "A->B")
+
+    def test_make_string_arguments_safe_ignore_type(self):
+        safe = make_string_arguments_safe("A->B", ignore_argument_type=True)
+        self.assertEqual(safe, "A%2D%3EB")
+
+    def test_revert_without_force_and_without_prefix_keeps_input(self):
+        self.assertEqual(revert_arguments_safe_string("A%2D%3EB"), "A%2D%3EB")
+
+    def test_revert_force_convert_without_prefix_decodes(self):
+        self.assertEqual(
+            revert_arguments_safe_string("A%2D%3EB", force_convert=True), "A->B"
+        )
 
     def test_ascii_alphanumeric_and_space_kept(self):
         original = "AbcXYZ019_. hello"
@@ -72,6 +99,10 @@ class SafeStringCodecTests(unittest.TestCase):
             to_safe_string(None)  # type: ignore[arg-type]
         with self.assertRaises(TypeError):
             from_safe_string(None)  # type: ignore[arg-type]
+        with self.assertRaises(TypeError):
+            make_string_arguments_safe("ok", ignore_argument_type=None)  # type: ignore[arg-type]
+        with self.assertRaises(TypeError):
+            revert_arguments_safe_string("ok", force_convert=None)  # type: ignore[arg-type]
 
 
 if __name__ == "__main__":

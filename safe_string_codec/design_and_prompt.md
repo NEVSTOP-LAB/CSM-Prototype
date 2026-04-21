@@ -17,6 +17,22 @@
 
 # 编码算法
 
+## 0) 与 CSM-Wiki VI 名称/参数对齐
+
+- `CSM - Make String Arguments Safe.vi`
+  - `Argument String`
+  - `Ignore Argument Type(F)`
+  - `Safe Argument String`
+- `CSM - Revert Arguments-Safe String.vi`
+  - `Safe Argument String`
+  - `Force Convert (F)`
+  - `Origin Argument String`
+
+Python 实现提供同语义接口：
+
+- `make_string_arguments_safe(argument_string, ignore_argument_type=False)`
+- `revert_arguments_safe_string(safe_argument_string, force_convert=False)`
+
 ## 1) 关键字来源
 
 根据 `CSM -- Revert Arguments Safe StringVI` 的关键字说明，涉及关键模式：
