@@ -36,7 +36,7 @@ def to_safe_string(text: str) -> str:
     encoded_parts: list[str] = []
     for ch in text:
         if ch in _ESCAPED_CHARS:
-            encoded_parts.append(f"{_ESCAPE}{ch.encode('ascii').hex().upper()}")
+            encoded_parts.append(f"{_ESCAPE}{ord(ch):02X}")
         else:
             encoded_parts.append(ch)
     return "".join(encoded_parts)

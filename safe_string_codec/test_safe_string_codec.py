@@ -8,7 +8,7 @@ class SafeStringCodecTests(unittest.TestCase):
         self.assertEqual(to_safe_string(""), "")
         self.assertEqual(from_safe_string(""), "")
 
-    def test_ascii_regular_text_kept(self):
+    def test_ascii_alphanumeric_and_space_kept(self):
         original = "AbcXYZ019_. hello"
         safe = to_safe_string(original)
         self.assertEqual(safe, original)
