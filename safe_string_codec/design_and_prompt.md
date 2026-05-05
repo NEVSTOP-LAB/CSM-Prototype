@@ -88,7 +88,7 @@ flowchart TD
     B -- 是 --> C{ignore_argument_type 是 bool?}
     C -- 否 --> E2[抛出 TypeError] --> Z
     C -- 是 --> D[逐字符扫描 argument_string]
-    D --> F{字符在 -|@&<>\\r\\n/;, 或 % ?}
+    D --> F{"字符在 -&#124;@&amp;&lt;&gt;\\r\\n/;, 或 % ?"}
     F -- 是 --> G[输出 %HH 大写十六进制]
     F -- 否 --> H[原样字符输出]
     G --> I{还有下一个字符?}
